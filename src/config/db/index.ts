@@ -1,98 +1,114 @@
 import dotenv from "dotenv";
-import mongoose from "mongoose";
+import { Pool } from "pg";
 import { logger } from "../../utils/logger.js";
 
 dotenv.config();
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+const {
+  DB_HOST,
+  DB_PORT,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+} = process.env;
 
-if (!MONGODB_URI) {
-  throw new Error("MONGODB_URI is not defined in the environment variables.");
+if (!DB_HOST || !DB_USER || !DB_NAME) {
+  throw new Error("PostgreSQL environment variables are not configured.");
 }
 
-// Prevent registering listeners multiple times.
+export const pool = new Pool({
+  host: DB_HOST,
+  port: Number(DB_PORT ?? 5432),
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+
+  // Pool configuration
+  max: 50,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 10000,
+
+  // Optional
+  allowExitOnIdle: false,
+});
+
+// Prevent registering listeners multiple times
 let listenersRegistered = false;
 
-const registerConnectionListeners = () => {
+const registerPoolListeners = () => {
   if (listenersRegistered) return;
 
   listenersRegistered = true;
 
-  mongoose.connection.on("connected", () => {
-    logger.info("MongoDB connected");
+  pool.on("connect", () => {
+    logger.info("New PostgreSQL client connected");
   });
 
-  mongoose.connection.on("disconnected", () => {
-    logger.warn("MongoDB disconnected");
+  pool.on("acquire", () => {
+    logger.debug("PostgreSQL client acquired from pool");
   });
 
-  mongoose.connection.on("reconnected", () => {
-    logger.info("MongoDB reconnected");
+  pool.on("remove", () => {
+    logger.info("PostgreSQL client removed from pool");
   });
 
-  mongoose.connection.on("error", (error) => {
-    logger.error("MongoDB connection error", error);
+  pool.on("error", (error) => {
+    logger.error("Unexpected PostgreSQL pool error", error);
   });
 };
 
+let connected = false;
+
 export const connectToDatabase = async () => {
-  registerConnectionListeners();
+  registerPoolListeners();
 
-  switch (mongoose.connection.readyState) {
-    case 1:
-      logger.debug("MongoDB already connected");
-      return mongoose;
-
-    case 2:
-      logger.debug("MongoDB connection already in progress");
-      return mongoose;
+  if (connected) {
+    logger.debug("PostgreSQL already connected");
+    return pool;
   }
 
   try {
-    await mongoose.connect(MONGODB_URI, {
-      maxPoolSize: 50,
-      minPoolSize: 5,
-      serverSelectionTimeoutMS: 5000,
-      socketTimeoutMS: 45000,
-      connectTimeoutMS: 10000,
-    });
+    const client = await pool.connect();
 
-    logger.info("MongoDB connection established");
+    await client.query("SELECT 1");
 
-    return mongoose;
+    client.release();
+
+    connected = true;
+
+    logger.info("PostgreSQL connection established");
+
+    return pool;
   } catch (error) {
-    logger.error("Failed to connect to MongoDB", error);
+    logger.error("Failed to connect to PostgreSQL", error);
     throw error;
   }
 };
 
 export const disconnectFromDatabase = async () => {
-  if (
-    mongoose.connection.readyState === 0 ||
-    mongoose.connection.readyState === 3
-  ) {
-    return;
-  }
+  if (!connected) return;
 
   try {
-    await mongoose.disconnect();
-    logger.info("MongoDB connection closed");
+    await pool.end();
+    connected = false;
+
+    logger.info("PostgreSQL pool closed");
   } catch (error) {
-    logger.error("Failed to disconnect MongoDB", error);
+    logger.error("Failed to close PostgreSQL pool", error);
     throw error;
   }
 };
 
 // Graceful shutdown
 const gracefulShutdown = async (signal: string) => {
-  logger.info(`${signal} received. Closing MongoDB connection...`);
+  logger.info(`${signal} received. Closing PostgreSQL pool...`);
 
   try {
     await disconnectFromDatabase();
-    logger.info("MongoDB disconnected gracefully");
+    logger.info("PostgreSQL disconnected gracefully");
     process.exit(0);
   } catch (error) {
-    logger.error("Error during MongoDB shutdown", error);
+    logger.error("Error during PostgreSQL shutdown", error);
     process.exit(1);
   }
 };

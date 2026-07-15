@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import mongoose from "mongoose";
+import { pool } from "../config/db/index.js";
 import redisClient from "../config/redis/index.js";
 
 export const live = (_req: Request, res: Response) => {
@@ -11,8 +11,12 @@ export const live = (_req: Request, res: Response) => {
 };
 
 export const ready = async (_req: Request, res: Response) => {
-  const mongo =
-    mongoose.connection.readyState === 1 ? "UP" : "DOWN";
+  let postgres = "DOWN";
+
+  try {
+    await pool.query("SELECT 1");
+    postgres = "UP";
+  } catch {}
 
   let redis = "DOWN";
 
@@ -21,14 +25,12 @@ export const ready = async (_req: Request, res: Response) => {
     redis = "UP";
   } catch {}
 
-  const healthy =
-    mongo === "UP" &&
-    redis === "UP";
+  const healthy = postgres === "UP" && redis === "UP";
 
   return res.status(healthy ? 200 : 503).json({
     status: healthy ? "UP" : "DOWN",
     services: {
-      mongodb: mongo,
+      postgres,
       redis,
     },
     uptime: process.uptime(),

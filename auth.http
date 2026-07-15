@@ -1,0 +1,113 @@
+### Variables
+# Adjust baseUrl if your auth routes are mounted under a different prefix
+# (e.g. router mounted as app.use("/api/auth", router))
+@baseUrl = http://localhost:5000/auth
+@contentType = application/json
+
+
+### Register a new user
+# @name register
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Test User",
+  "email": "chibuife1@example.com",
+  "password": "SecurePass123!",
+  "role": "patient"
+}
+
+
+### Login
+# @name login
+POST {{baseUrl}}/login
+Content-Type: {{contentType}}
+
+{
+  "email": "chibuife1@example.com",
+  "password": "SecurePass123!"
+}
+
+### -> Capture the access token from the login response for later requests
+@accessToken = {{login.response.body.token}}
+
+
+### Refresh access token
+# Relies on the httpOnly refreshToken cookie set by /login.
+# REST Client keeps a per-domain cookie jar automatically, so this just
+# works as long as you ran /login first in the same session.
+# @name refresh
+POST {{baseUrl}}/refresh
+Content-Type: {{contentType}}
+
+
+### Logout
+# @name logout
+POST {{baseUrl}}/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+
+### Forgot password
+# @name forgotPassword
+POST {{baseUrl}}/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com"
+}
+
+
+### Reset password
+# resetPassword is currently a stub (no body parsing yet) - adjust once
+# the token verification / password update logic is implemented.
+# @name resetPassword
+POST {{baseUrl}}/reset-password
+Content-Type: {{contentType}}
+
+{
+  "token": "REPLACE_WITH_RESET_TOKEN",
+  "newPassword": "NewSecurePass456!"
+}
+
+
+### Verify email
+# @name verifyEmail
+POST {{baseUrl}}/verify-email
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com"
+}
+
+
+### --- Negative / edge cases ---
+
+### Login with wrong password (expect 401)
+POST {{baseUrl}}/login
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "WrongPassword!"
+}
+
+
+### Register with missing fields (expect 400)
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "email": "incomplete@example.com"
+}
+
+
+### Register duplicate email (expect 409, run /register above first)
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Duplicate User",
+  "email": "testuser@example.com",
+  "password": "AnotherPass789!"
+}

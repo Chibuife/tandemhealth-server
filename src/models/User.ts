@@ -1,61 +1,41 @@
-import mongoose, { Schema, Document } from "mongoose";
-import bcrypt from "bcrypt";
+// Plain TypeScript types replacing the Mongoose model.
+// Postgres has no schema-level "model" object - the shape just lives here,
+// and UserRepository is responsible for all reads/writes.
 
-export interface UserDocument extends Document {
+export interface User {
+  id: string;
   name: string;
   email: string;
-  age: number;
-  password: string;
-  comparePassword(candidatePassword: string): Promise<boolean>;
+  role: "doctor" | "patient" | "admin";
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-const userSchema = new Schema<UserDocument>(
-  {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
-      trim: true,
-    },
-    age: {
-      type: Number,
-      required: true,
-    },
-    password: {
-      type: String,
-      required: true,
-      minlength: 6,
-      select: false, // Password won't be returned unless explicitly selected
-    },
-  },
-  {
-    timestamps: true,
-  }
-);
+// Only used internally by the repository when a query needs the hash
+// (e.g. login). Never returned to controllers/clients directly.
+export interface UserWithPassword extends User {
+  password: string;
+}
 
-// Hash password before saving
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-  }
+export interface CreateUserInput {
+  name: string;
+  email: string;
+  password: string; // plain text in, hashed inside the repository
+  role:"doctor" | "patient" | "admin"; // role of the user
+}
 
-  try {
-    const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
-  } catch (error) {
-  }
+// Maps a raw `users` table row (snake_case) to the camelCase User shape
+// used throughout the app.
+export const mapRowToUser = (row: any): User => ({
+  id: row.id,
+  name: row.name,
+  email: row.email,
+  role: row.role,
+  createdAt: row.created_at,
+  updatedAt: row.updated_at,
 });
 
-// Method to compare passwords during login
-userSchema.methods.comparePassword = async function (
-  candidatePassword: string
-): Promise<boolean> {
-  return bcrypt.compare(candidatePassword, this.password);
-};
-
-export default mongoose.model<UserDocument>("User", userSchema);
+export const mapRowToUserWithPassword = (row: any): UserWithPassword => ({
+  ...mapRowToUser(row),
+  password: row.password,
+});

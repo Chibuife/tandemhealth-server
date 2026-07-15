@@ -1,10 +1,9 @@
 import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/User.js";
 import { generateAccessToken, generateRefreshToken } from "../helper/tokens.js";
 import { logger } from "../utils/logger.js";
 import redisClient from "../config/redis/index.js";
-import UserRepository  from "../repositories/UserRepository.js";
+import { UserRepository } from "../repositories/UserRepository.js";
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -26,7 +25,6 @@ export const getUserById = async (
       req.params.id as string,
       req.user!.id
     );
-
 
     if (!user) {
       logger.warn(`User not found. ID: ${req.user?.id}`);
@@ -56,8 +54,6 @@ export const loginUser = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body ?? {};
 
-
-
     if (!email || !password) {
       logger.warn("Login attempt missing email or password");
 
@@ -84,7 +80,7 @@ export const loginUser = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.findOne({ email }).select("+password");
+    const user = await UserRepository.findByEmailWithPassword(email);
 
     if (!user) {
       logger.warn(`Login failed. User not found: ${email}`);
@@ -95,7 +91,10 @@ export const loginUser = async (req: Request, res: Response) => {
       });
     }
 
-    const isMatch = await user.comparePassword(password);
+    const isMatch = await UserRepository.comparePassword(
+      password,
+      user.password
+    );
 
     if (!isMatch) {
       logger.warn(`Invalid password for ${email}`);
@@ -106,15 +105,8 @@ export const loginUser = async (req: Request, res: Response) => {
       });
     }
 
-    const accessToken = generateAccessToken(
-      String(user._id),
-      user.email
-    );
-
-    const refreshToken = generateRefreshToken(
-      String(user._id),
-      user.email
-    );
+    const accessToken = generateAccessToken(user.id, user.email);
+    const refreshToken = generateRefreshToken(user.id, user.email);
 
     logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] User logged in: ${user.email}`);
     await redisClient.del(key);
@@ -130,10 +122,9 @@ export const loginUser = async (req: Request, res: Response) => {
         message: "Login successful",
         token: accessToken,
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
-          age: user.age,
         },
       });
   } catch (error) {
@@ -167,17 +158,17 @@ export const registerUser = async (req: Request, res: Response) => {
   logger.debug("registerUser controller called");
 
   try {
-    const { name, email, age, password } = req.body ?? {};
+    const { name, email, password, role } = req.body ?? {};
 
-    if (!name || !email || !age || !password) {
+    if (!name || !email || !password) {
       logger.warn("Registration missing required fields");
 
       return res.status(400).json({
-        message: "Name, email, age, and password are required",
+        message: "Name, email, and password are required",
       });
     }
 
-    const existingUser = await User.findOne({ email });
+    const existingUser = await UserRepository.findByEmail(email);
 
     if (existingUser) {
       logger.warn(`Registration failed. User exists: ${email}`);
@@ -187,22 +178,10 @@ export const registerUser = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.create({
-      name,
-      email,
-      age,
-      password,
-    });
+    const user = await UserRepository.create({ name, email, password, role });
 
-    const accessToken = generateAccessToken(
-      String(user._id),
-      user.email
-    );
-
-    const refreshToken = generateRefreshToken(
-      String(user._id),
-      user.email
-    );
+    const accessToken = generateAccessToken(user.id, user.email);
+    const refreshToken = generateRefreshToken(user.id, user.email);
 
     logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] New user registered: ${user.email}`);
 
@@ -218,13 +197,22 @@ export const registerUser = async (req: Request, res: Response) => {
         message: "User registered successfully",
         token: accessToken,
         user: {
-          id: user._id,
+          id: user.id,
           name: user.name,
           email: user.email,
-          age: user.age,
         },
       });
   } catch (error) {
+    // Postgres unique-violation error code, in case of a race between the
+    // existence check above and the insert.
+    if ((error as any)?.code === "23505") {
+      logger.warn("Registration failed. Unique constraint violated");
+
+      return res.status(409).json({
+        message: "User already exists",
+      });
+    }
+
     logger.error("Registration failed", error);
 
     return res.status(500).json({
@@ -275,8 +263,6 @@ export const refreshToken = (req: Request, res: Response) => {
   }
 };
 
-
-
 export const forgotPassword = async (req: Request, res: Response) => {
   logger.debug("forgotPassword controller called");
 
@@ -317,7 +303,7 @@ export const forgotPassword = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.findOne({ email: normalizedEmail });
+    const user = await UserRepository.findByEmail(normalizedEmail);
 
     if (user) {
       logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] Password reset requested for ${normalizedEmail}`);
@@ -343,7 +329,6 @@ export const forgotPassword = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const resetPassword = async (req: Request, res: Response) => {
   logger.debug("resetPassword controller called");
@@ -381,7 +366,6 @@ export const resetPassword = async (req: Request, res: Response) => {
     });
   }
 };
-
 
 export const verifyEmail = async (req: Request, res: Response) => {
   logger.debug("verifyEmail controller called");

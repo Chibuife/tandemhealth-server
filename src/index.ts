@@ -9,6 +9,7 @@ import { logger } from './utils/logger.js';
 import { createServer } from 'node:http';
 import { connectToDatabase, disconnectFromDatabase } from './config/db/index.js';
 import requestId from './middleware/requestId.js';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const server = createServer(app);
@@ -20,6 +21,7 @@ const stream = {
 };
 
 app.use(express.json());
+app.use(cookieParser());
 app.use(requestId);
 
 // app.use(morgan(':method :url :status :res[content-length] - :response-time ms',
@@ -44,8 +46,8 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     try {
         await connectToDatabase();
+
         server.listen(PORT, () => {
-            console.log(`Server running on port ${PORT}`);
             logger.info(`Server running on port ${PORT}`);
         });
     } catch (error) {
@@ -59,27 +61,25 @@ startServer();
 
 
 // --- GRACEFUL SHUTDOWN IMPLEMENTATION ---
-
 async function gracefulShutdown(signal: string) {
-    console.log(`Received ${signal}. Starting graceful shutdown...`);
+    logger.info(`Received ${signal}. Starting graceful shutdown...`);
 
     server.close(async () => {
-        console.log('HTTP server closed. All in-flight requests successfully drained.');
+        logger.info('HTTP server closed. All in-flight requests successfully drained.');
 
         try {
             await disconnectFromDatabase();
         } catch (error) {
-            console.error('Error closing database connection:', error);
+            logger.error('Error closing PostgreSQL connection:', error);
         }
 
         process.exit(0);
     });
 
-    // 4. Force a hard timeout kill if requests take way too long to process (e.g., hung connections)
     setTimeout(() => {
-        console.error('Forcing hard shutdown: In-flight requests took too long to drain.');
+        logger.error('Forcing hard shutdown: In-flight requests took too long to drain.');
         process.exit(1);
-    }, 30000); // Wait maximum 30 seconds
+    }, 30000);
 }
 
 // Listen for standard cloud termination signals
