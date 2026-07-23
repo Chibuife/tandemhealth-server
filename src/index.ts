@@ -48,6 +48,7 @@ app.get("/", (req, res) => {
     res.send('Hello World!');
 });
 
+
 app.get("/error", (req, res) => {
     logger.error("This is an error message");
     res.json({ message: 'Hello World!', error: 'This is an error message' });
