@@ -27,9 +27,24 @@ const stream = {
 };
 
 
+const allowedOrigins = [
+  "http://localhost:3000",
+  "https://tandemhealth.vercel.app", // your production domain
+  "https://tandemhealth-8pqtcs32s-chibuifes-projects-ee8510c7.vercel.app", // current preview
+];
+
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin(origin, callback) {
+      // Allow requests with no Origin (Postman, mobile apps, curl)
+      if (!origin) return callback(null, true);
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    },
     credentials: true,
     methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],

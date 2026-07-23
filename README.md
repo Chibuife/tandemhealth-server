@@ -1,3 +1,8 @@
+CLI TO RUN MIGRATE 
+
+npx tsx src/config/db/migrate.ts
+
+
 CREATE TABLE IF NOT EXISTS meetings (
   id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   slug              VARCHAR(20) NOT NULL UNIQUE,
