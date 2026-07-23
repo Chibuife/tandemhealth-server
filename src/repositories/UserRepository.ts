@@ -93,4 +93,39 @@ export const UserRepository = {
   ): Promise<boolean> {
     return bcrypt.compare(plainPassword, hashedPassword);
   },
+
+  async listDoctors(filters?: { search?: string }): Promise<User[]> {
+    const conditions: string[] = [`role = 'doctor'`];
+    const values: string[] = [];
+
+    if (filters?.search) {
+      values.push(`%${filters.search}%`);
+      conditions.push(`(name ILIKE $${values.length} OR email ILIKE $${values.length})`);
+    }
+
+    const result = await pool.query(
+      `SELECT id, name, email, role, created_at, updated_at
+     FROM users
+     WHERE ${conditions.join(" AND ")}
+     ORDER BY name ASC`,
+      values
+    );
+
+    return result.rows.map(mapRowToUser);
+  },
+
+  async findDoctorById(id: string): Promise<User | null> {
+    const result = await pool.query(
+      `SELECT id, name, email, role, created_at, updated_at
+     FROM users
+     WHERE id = $1 AND role = 'doctor'`,
+      [id]
+    );
+
+    if (result.rowCount === 0) {
+      return null;
+    }
+
+    return mapRowToUser(result.rows[0]);
+  },
 };

@@ -105,7 +105,7 @@ export const loginUser = async (req: Request, res: Response) => {
       });
     }
 
-    const accessToken = generateAccessToken(user.id, user.email);
+    const accessToken = generateAccessToken(user.id, user.email, );
     const refreshToken = generateRefreshToken(user.id, user.email);
 
     logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] User logged in: ${user.email}`);

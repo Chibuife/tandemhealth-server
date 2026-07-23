@@ -85,3 +85,78 @@ export const logoutLimiter = rateLimit({
         message: "Too many logout requests.",
     },
 });
+
+
+
+
+// --- Add these to your existing src/middleware/rateLimiter.ts, alongside
+// the auth limiters already there (loginLimiter, registerLimiter, etc).
+// Import { rateLimit } and { RedisStore } are already at the top of that
+// file - no new imports needed.
+
+export const scheduleMeetingLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: "Too many meetings scheduled. Please try again later.",
+    },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
+
+export const listMeetingsLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: "Too many requests. Please slow down.",
+    },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
+
+export const getMeetingLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: "Too many requests. Please slow down.",
+    },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
+
+// Join endpoint - slightly tighter since a legitimate client only needs to
+// call this once or twice per call (initial join + maybe a reconnect).
+export const getMeetingTokenLimiter = rateLimit({
+    windowMs: 5 * 60 * 1000, // 5 minutes
+    max: 20,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: "Too many join attempts. Please try again shortly.",
+    },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
+
+export const endMeetingLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: {
+        message: "Too many requests. Please slow down.",
+    },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});

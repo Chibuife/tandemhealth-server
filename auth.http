@@ -81,7 +81,70 @@ Content-Type: {{contentType}}
 }
 
 
+### --- Meeting endpoints ---
+
+@meetingBaseUrl = http://localhost:5000/meetings
+
+### Schedule a meeting
+# @name scheduleMeeting
+POST {{meetingBaseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "Doctor Consultation",
+  "participantId": "5f5abbeb-afc9-41d1-9095-a58c985f0928",
+  "scheduledStart": "2026-07-21T04:00:00.000Z",
+  "scheduledEnd": "2026-07-21T23:50:00.000Z"
+}
+
+### Capture the meeting slug from the schedule response
+@meetingSlug = {{scheduleMeeting.response.body.meeting.slug}}
+
+### List my meetings
+GET {{meetingBaseUrl}}
+Authorization: Bearer {{accessToken}}
+
+### Get meeting details by slug
+GET {{meetingBaseUrl}}/{{meetingSlug}}
+Authorization: Bearer {{accessToken}}
+
+### Get meeting details by slug
+
+GET {{meetingBaseUrl}}/id/dafc4dcc-f660-425a-9416-b08e00557f66
+Authorization: Bearer {{accessToken}}
+
+
+### Get a meeting join token
+POST {{meetingBaseUrl}}/{{meetingSlug}}/token
+Authorization: Bearer {{accessToken}}
+
+### Send a message in a meeting
+POST {{meetingBaseUrl}}/{{meetingSlug}}/messages
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "content": "Hello from the patient"
+}
+
+### End a meeting
+POST {{meetingBaseUrl}}/{{meetingSlug}}/end
+Authorization: Bearer {{accessToken}}
+
 ### --- Negative / edge cases ---
+@doctorBaseUrl = http://localhost:5000/doctors
+
+### List doctors
+GET {{doctorBaseUrl}}
+Authorization: Bearer {{accessToken}}
+
+### List doctors filtered
+GET {{doctorBaseUrl}}
+Authorization: Bearer {{accessToken}}
+
+
+
 
 ### Login with wrong password (expect 401)
 POST {{baseUrl}}/login

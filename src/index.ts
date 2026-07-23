@@ -4,12 +4,18 @@ import express from 'express';
 import userRoutes from './routes/User.js';
 import authRoutes from './routes/Auth.js';
 import healthRoutes from './routes/health.js';
+import meetingRoutes from './routes/Meeting.js';
+import doctorRoutes from './routes/DoctorRoutes.js';
+
 import morgan from 'morgan';
 import { logger } from './utils/logger.js';
 import { createServer } from 'node:http';
 import { connectToDatabase, disconnectFromDatabase } from './config/db/index.js';
 import requestId from './middleware/requestId.js';
 import cookieParser from 'cookie-parser';
+import { initSocketServer } from './sockets/index.js';
+import cors from "cors";
+
 
 const app = express();
 const server = createServer(app);
@@ -19,6 +25,16 @@ app.set('trust proxy', 1);
 const stream = {
     write: (message: string) => logger.http(message.trim()),
 };
+
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
 app.use(express.json());
 app.use(cookieParser());
@@ -31,6 +47,8 @@ app.use(requestId);
 app.use("/health", healthRoutes);
 app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
+app.use('/meetings', meetingRoutes);
+app.use('/doctors', doctorRoutes);
 app.get("/", (req, res) => {
     res.send('Hello World!');
 });
@@ -46,7 +64,7 @@ const PORT = process.env.PORT || 5000;
 const startServer = async () => {
     try {
         await connectToDatabase();
-
+        initSocketServer(server);
         server.listen(PORT, () => {
             logger.info(`Server running on port ${PORT}`);
         });
