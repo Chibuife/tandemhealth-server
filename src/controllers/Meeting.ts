@@ -111,6 +111,7 @@ export const acceptConsultation = async (
       return res.status(403).json({ message: "Only the assigned doctor can respond to this request" });
     }
 
+    console.log(meeting,"meet")
     if (meeting.status !== "pending") {
       return res.status(409).json({ message: `Consultation is already ${meeting.status}` });
     }

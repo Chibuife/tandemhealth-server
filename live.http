@@ -1,0 +1,176 @@
+### Variables
+# Adjust baseUrl if your auth routes are mounted under a different prefix
+# (e.g. router mounted as app.use("/api/auth", router))
+@baseUrl = https://tandemhealth-server.onrender.com/auth
+@contentType = application/json
+
+
+### Register a new user
+# @name register
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Test User",
+  "email": "chibuife1@example.com",
+  "password": "SecurePass123!",
+  "role": "patient"
+}
+
+
+### Login
+# @name login
+POST {{baseUrl}}/login
+Content-Type: {{contentType}}
+
+{
+  "email": "chibuife1@example.com",
+  "password": "SecurePass123!"
+}
+
+### -> Capture the access token from the login response for later requests
+@accessToken = {{login.response.body.token}}
+
+
+### Refresh access token
+# Relies on the httpOnly refreshToken cookie set by /login.
+# REST Client keeps a per-domain cookie jar automatically, so this just
+# works as long as you ran /login first in the same session.
+# @name refresh
+POST {{baseUrl}}/refresh
+Content-Type: {{contentType}}
+
+
+### Logout
+# @name logout
+POST {{baseUrl}}/logout
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+
+### Forgot password
+# @name forgotPassword
+POST {{baseUrl}}/forgot-password
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com"
+}
+
+
+### Reset password
+# resetPassword is currently a stub (no body parsing yet) - adjust once
+# the token verification / password update logic is implemented.
+# @name resetPassword
+POST {{baseUrl}}/reset-password
+Content-Type: {{contentType}}
+
+{
+  "token": "REPLACE_WITH_RESET_TOKEN",
+  "newPassword": "NewSecurePass456!"
+}
+
+
+### Verify email
+# @name verifyEmail
+POST {{baseUrl}}/verify-email
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com"
+}
+
+
+### --- Meeting endpoints ---
+
+@meetingBaseUrl = https://tandemhealth-server.onrender.com/meetings
+
+### Schedule a meeting
+# @name scheduleMeeting
+POST {{meetingBaseUrl}}
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "title": "Doctor Consultation",
+  "participantId": "06573384-d946-40bc-a964-30d190b7bbd8",
+  "scheduledStart": "2026-07-21T04:00:00.000Z",
+  "scheduledEnd": "2026-07-21T23:50:00.000Z"
+}
+
+### Capture the meeting slug from the schedule response
+@meetingSlug = {{scheduleMeeting.response.body.meeting.slug}}
+
+### List my meetings
+GET {{meetingBaseUrl}}
+Authorization: Bearer {{accessToken}}
+
+### Get meeting details by slug
+GET {{meetingBaseUrl}}/{{meetingSlug}}
+Authorization: Bearer {{accessToken}}
+
+### Get meeting details by slug
+
+GET {{meetingBaseUrl}}/id/dafc4dcc-f660-425a-9416-b08e00557f66
+Authorization: Bearer {{accessToken}}
+
+
+### Get a meeting join token
+POST {{meetingBaseUrl}}/{{meetingSlug}}/token
+Authorization: Bearer {{accessToken}}
+
+### Send a message in a meeting
+POST {{meetingBaseUrl}}/{{meetingSlug}}/messages
+Content-Type: {{contentType}}
+Authorization: Bearer {{accessToken}}
+
+{
+  "content": "Hello from the patient"
+}
+
+### End a meeting
+POST {{meetingBaseUrl}}/{{meetingSlug}}/end
+Authorization: Bearer {{accessToken}}
+
+### --- Negative / edge cases ---
+@doctorBaseUrl = https://tandemhealth-server.onrender.com/doctors
+
+### List doctors
+GET {{doctorBaseUrl}}
+Authorization: Bearer {{accessToken}}
+
+### List doctors filtered
+GET {{doctorBaseUrl}}
+Authorization: Bearer {{accessToken}}
+
+
+
+
+### Login with wrong password (expect 401)
+POST {{baseUrl}}/login
+Content-Type: {{contentType}}
+
+{
+  "email": "testuser@example.com",
+  "password": "WrongPassword!"
+}
+
+
+### Register with missing fields (expect 400)
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "email": "incomplete@example.com"
+}
+
+
+### Register duplicate email (expect 409, run /register above first)
+POST {{baseUrl}}/register
+Content-Type: {{contentType}}
+
+{
+  "name": "Duplicate User",
+  "email": "testuser@example.com",
+  "password": "AnotherPass789!"
+}
