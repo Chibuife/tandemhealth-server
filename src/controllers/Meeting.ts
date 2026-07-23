@@ -107,7 +107,7 @@ export const acceptConsultation = async (
       return res.status(404).json({ message: "Consultation not found" });
     }
 
-    if (meeting.hostId !== req.user!.id) {
+    if (meeting.participantId !== req.user!.id) {
       return res.status(403).json({ message: "Only the assigned doctor can respond to this request" });
     }
 
