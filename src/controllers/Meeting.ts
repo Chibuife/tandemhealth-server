@@ -112,6 +112,7 @@ export const acceptConsultation = async (
     }
 
     console.log(meeting,"meet")
+    
     if (meeting.status !== "pending") {
       return res.status(409).json({ message: `Consultation is already ${meeting.status}` });
     }
