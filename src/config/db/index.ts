@@ -30,6 +30,9 @@ export const pool = new Pool({
 
   // Optional
   allowExitOnIdle: false,
+    ssl: {
+    rejectUnauthorized: false,
+  },
 });
 
 // Prevent registering listeners multiple times
