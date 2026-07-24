@@ -30,10 +30,10 @@ const stream = {
 
 
 app.use(
-  cors({
-    origin: true,
-    credentials: true,
-  })
+    cors({
+        origin: true,
+        credentials: true,
+    })
 );
 
 
