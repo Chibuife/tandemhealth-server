@@ -3,35 +3,22 @@ import { type JobContext, WorkerOptions, cli, defineAgent } from "@livekit/agent
 import { AudioStream, RoomEvent, TrackKind, type Track } from "@livekit/rtc-node";
 import { SpeechClient } from "@google-cloud/speech";
 import { fileURLToPath } from "node:url";
-import http from "node:http"; // 1. Added http import
 import dotenv from "dotenv";
 
 dotenv.config();
 
 process.on("uncaughtException", (err) => {
-  console.error("UNCAUGHT EXCEPTION");
-  console.error(err);
+  console.error("UNCAUGHT EXCEPTION", err);
 });
 
 process.on("unhandledRejection", (reason) => {
-  console.error("UNHANDLED REJECTION");
-  console.error(reason);
+  console.error("UNHANDLED REJECTION", reason);
 });
 
-// 2. Added HTTP server for Render's Web Service Health Check
-const PORT = process.env.PORT || 10000;
-http
-  .createServer((req, res) => {
-    res.writeHead(200, { "Content-Type": "text/plain" });
-    res.end("LiveKit Medical Agent Healthy\n");
-  })
-  .listen(PORT, () => {
-    console.log(`[agent] Health check HTTP server listening on port ${PORT}`);
-  });
+// REMOVED: http.createServer listening on process.env.PORT (Express handles this)
 
-const speech = new SpeechClient(); // reads GOOGLE_APPLICATION_CREDENTIALS from this process's env
-
-const STREAM_MAX_MS = 4 * 60 * 1000; // restart before Google's ~5 min hard limit
+const speech = new SpeechClient();
+const STREAM_MAX_MS = 4 * 60 * 1000;
 
 function openRecognizeStream(identity: string) {
   return speech
@@ -40,7 +27,7 @@ function openRecognizeStream(identity: string) {
         encoding: "LINEAR16" as const,
         sampleRateHertz: 48000,
         languageCode: "en-US",
-        model: "medical_conversation", // confirm this model + region combo is enabled for your project
+        model: "medical_conversation",
         enableAutomaticPunctuation: true,
       },
       interimResults: true,
@@ -99,10 +86,9 @@ try {
       apiKey: process.env.LIVEKIT_API_KEY!,
       apiSecret: process.env.LIVEKIT_API_SECRET!,
       wsURL: process.env.LIVEKIT_URL!,
-      port: 8081,
+      port: 8081, // Kept for LiveKit internal agent communication
     })
   );
 } catch (err) {
-  console.error("Worker crashed");
-  console.error(err);
+  console.error("Worker crashed", err);
 }
