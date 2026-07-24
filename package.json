@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "npx concurrently \"node dist/index.js\" \"node dist/agent/medical-notes-agent.js start\"",
+    "start": "npx concurrently \"node dist/index.js\" \"node dist/agent/medical-notes-agent.js dev\"",
     "start:agent": "node dist/agent/medical-notes-agent.js start",
     "agent": "tsx src/agent/medical-notes-agent.ts"
   },

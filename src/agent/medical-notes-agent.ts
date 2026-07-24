@@ -17,11 +17,18 @@ process.on("unhandledRejection", (reason) => {
 
 // REMOVED: http.createServer listening on process.env.PORT (Express handles this)
 
-const speech = new SpeechClient();
-const STREAM_MAX_MS = 4 * 60 * 1000;
+// Replace: const speech = new SpeechClient();
+
+let speechClient: SpeechClient | null = null;
+function getSpeechClient() {
+  if (!speechClient) {
+    speechClient = new SpeechClient();
+  }
+  return speechClient;
+}
 
 function openRecognizeStream(identity: string) {
-  return speech
+  return getSpeechClient()
     .streamingRecognize({
       config: {
         encoding: "LINEAR16" as const,
@@ -40,6 +47,9 @@ function openRecognizeStream(identity: string) {
       console.log(`[${result.isFinal ? "FINAL" : "LIVE"}][${identity}] ${transcript}`);
     });
 }
+const STREAM_MAX_MS = 4 * 60 * 1000;
+
+
 
 async function transcribeParticipant(track: Track, identity: string) {
   const audioStream = new AudioStream(track, { sampleRate: 48000, numChannels: 1 });
