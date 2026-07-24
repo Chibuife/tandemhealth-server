@@ -25,32 +25,17 @@ const pool = new Pool({
   },
 });
 
-// async function migrate() {
-//     const sql = readFileSync("src/config/db/schema.sql", "utf8");
-
-//     await pool.query(sql);
-
-//     console.log("✅ Schema created successfully");
-
-//     await pool.end();
-// }
-
-// migrate().catch((err) => {
-//     console.error(err);
-//     process.exit(1);
-// });
-
 async function migrate() {
-  const sql = readFileSync(
-    "src/config/db/002_add_meeting_columns.sql",
-    "utf8"
-  );
+    const sql = readFileSync("src/config/db/schema.sql", "utf8");
 
-  await pool.query(sql);
+    await pool.query(sql);
 
-  console.log("✅ Migration completed");
+    console.log("✅ Schema created successfully");
 
-  await pool.end();
+    await pool.end();
 }
 
-migrate().catch(console.error);
+migrate().catch((err) => {
+    console.error(err);
+    process.exit(1);
+});

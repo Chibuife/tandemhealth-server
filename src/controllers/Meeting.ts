@@ -4,6 +4,7 @@ import { createLiveKitToken } from "../config/livekit.js";
 import { getSocketServer } from "../sockets/index.js";
 import { logger } from "../utils/logger.js";
 import type { AuthenticatedRequest } from "../middleware/authmiddleware.js";
+import { ensureAIAgentDispatched } from "../services/AIAgentDispatch.js";
 
 // How early a participant is allowed to join before the scheduled start,
 // same idea as Google Meet letting you in a few minutes early.
@@ -111,8 +112,8 @@ export const acceptConsultation = async (
       return res.status(403).json({ message: "Only the assigned doctor can respond to this request" });
     }
 
-    console.log(meeting,"meet")
-    
+    console.log(meeting, "meet")
+
     if (meeting.status !== "pending") {
       return res.status(409).json({ message: `Consultation is already ${meeting.status}` });
     }
@@ -277,9 +278,13 @@ export const getMeetingToken = async (
       return res.status(403).json({ message: "This consultation hasn't been accepted yet" });
     }
 
-    // if (meeting.status === "accepted") {
-    //   await MeetingRepository.setStatus(meeting.slug, "live");
-    // }
+    if (meeting.status === "accepted") {
+
+      // await MeetingRepository.setStatus(meeting.slug, "live");
+      ensureAIAgentDispatched(meeting.slug).catch((error) =>
+        logger.warn("Could not dispatch AI agent", error)
+      );
+    }
 
     // const token = await createLiveKitToken(
     //   meeting.slug,

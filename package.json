@@ -13,6 +13,9 @@
   "license": "ISC",
   "type": "module",
   "dependencies": {
+    "@livekit/agents": "^1.5.5",
+    "@livekit/agents-plugin-deepgram": "^1.5.5",
+    "@livekit/rtc-node": "^0.13.31",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
     "cookie-parser": "^1.4.7",
