@@ -99,7 +99,7 @@ try {
       apiKey: process.env.LIVEKIT_API_KEY!,
       apiSecret: process.env.LIVEKIT_API_SECRET!,
       wsURL: process.env.LIVEKIT_URL!,
-      port: 8081, // <--- Explicitly set health check port to avoid Express collision
+      port: 8081,
     })
   );
 } catch (err) {
