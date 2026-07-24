@@ -96,6 +96,7 @@ try {
       apiKey: process.env.LIVEKIT_API_KEY!,
       apiSecret: process.env.LIVEKIT_API_SECRET!,
       wsURL: process.env.LIVEKIT_URL!,
+      
       port: 8081, // Kept for LiveKit internal agent communication
       initializeProcessTimeout: 30000,
       numIdleProcesses: 1, // <--- Pre-warms 1 child process so dispatch is instant
