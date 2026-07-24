@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "concurrently \"node dist/index.js\" \"node dist/agent/medical-notes-agent.js start\"",
+    "start": "npx concurrently \"node dist/index.js\" \"node dist/agent/medical-notes-agent.js start\"",
     "start:agent": "node dist/agent/medical-notes-agent.js start",
     "agent": "tsx src/agent/medical-notes-agent.ts"
   },
@@ -21,6 +21,7 @@
     "@livekit/rtc-node": "^0.13.31",
     "bcrypt": "^6.0.0",
     "bcryptjs": "^3.0.3",
+    "concurrently": "^10.0.3",
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
