@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
-    "start": "npx concurrently \"node --max-old-space-size=120 dist/index.js\" \"node --max-old-space-size=250 dist/agent/medical-notes-agent.js start\"",
+    "start": "node dist/index.js",
     "start:agent": "node dist/agent/medical-notes-agent.js start",
     "agent": "tsx src/agent/medical-notes-agent.ts"
   },
