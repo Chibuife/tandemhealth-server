@@ -52,4 +52,27 @@ router.post("/", async (req, res) => {
   }
 });
 
+router.get("/:roomName", async (req, res) => {
+    const { roomName } = req.params;
+
+    const { rows } = await pool.query(
+        `
+        SELECT
+            id,
+            role,
+            identity,
+            transcript,
+            timestamp,
+            final,
+            overlap
+        FROM transcripts
+        WHERE room_name = $1
+        ORDER BY timestamp ASC
+        `,
+        [roomName]
+    );
+
+    res.json(rows);
+});
+
 export default router;
