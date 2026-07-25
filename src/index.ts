@@ -6,7 +6,7 @@ import authRoutes from './routes/Auth.js';
 import healthRoutes from './routes/health.js';
 import meetingRoutes from './routes/Meeting.js';
 import doctorRoutes from './routes/DoctorRoutes.js';
-import doctorRoutes from './routes/Tra.js';
+import transcriptsRoutes from './routes/Transcripts.js';
 
 import morgan from 'morgan';
 import { logger } from './utils/logger.js';
@@ -51,6 +51,9 @@ app.use('/users', userRoutes);
 app.use('/auth', authRoutes);
 app.use('/meetings', meetingRoutes);
 app.use('/doctors', doctorRoutes);
+app.use('/transcripts', transcriptsRoutes);
+
+
 app.get("/", (req, res) => {
     res.send('Hello World!');
 });
