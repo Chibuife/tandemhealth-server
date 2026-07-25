@@ -71,3 +71,24 @@ CREATE TRIGGER trg_meetings_updated_at
 BEFORE UPDATE ON meetings
 FOR EACH ROW
 EXECUTE FUNCTION set_updated_at();
+
+
+CREATE TABLE transcripts (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    room_name TEXT NOT NULL,
+
+    role TEXT NOT NULL,
+
+    identity TEXT NOT NULL,
+
+    transcript TEXT NOT NULL,
+
+    timestamp TIMESTAMPTZ NOT NULL,
+
+    final BOOLEAN DEFAULT FALSE,
+
+    overlap BOOLEAN DEFAULT FALSE,
+
+    created_at TIMESTAMPTZ DEFAULT now()
+);

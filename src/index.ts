@@ -6,6 +6,7 @@ import authRoutes from './routes/Auth.js';
 import healthRoutes from './routes/health.js';
 import meetingRoutes from './routes/Meeting.js';
 import doctorRoutes from './routes/DoctorRoutes.js';
+import doctorRoutes from './routes/Tra.js';
 
 import morgan from 'morgan';
 import { logger } from './utils/logger.js';
