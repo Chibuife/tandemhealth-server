@@ -7,6 +7,7 @@ import healthRoutes from './routes/health.js';
 import meetingRoutes from './routes/Meeting.js';
 import doctorRoutes from './routes/DoctorRoutes.js';
 import transcriptsRoutes from './routes/Transcripts.js';
+import soapRoutes from './routes/SoapRoutes.js';
 
 import morgan from 'morgan';
 import { logger } from './utils/logger.js';
@@ -16,7 +17,6 @@ import requestId from './middleware/requestId.js';
 import cookieParser from 'cookie-parser';
 import { initSocketServer } from './sockets/index.js';
 import cors from "cors";
-import "./worker/soap-worker.js";
 
 const app = express();
 const server = createServer(app);
@@ -52,6 +52,8 @@ app.use('/auth', authRoutes);
 app.use('/meetings', meetingRoutes);
 app.use('/doctors', doctorRoutes);
 app.use('/transcripts', transcriptsRoutes);
+app.use('/soap', soapRoutes);
+
 
 
 app.get("/", (req, res) => {
