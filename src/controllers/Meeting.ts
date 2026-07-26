@@ -250,7 +250,7 @@ export const getMeetingToken = async (
       return res.status(404).json({ message: "Meeting not found" });
     }
     const role =
-      req.body.role
+      req.user!.role
     if (!isParticipant(meeting, req.user!.id)) {
       return res.status(403).json({ message: "You are not part of this meeting" });
     }

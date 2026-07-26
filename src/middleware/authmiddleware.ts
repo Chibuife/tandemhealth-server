@@ -12,6 +12,7 @@ export interface AuthenticatedRequest extends Request {
   user?: {
     id: string;
     email: string;
+    role:string;
   };
 }
 
@@ -38,6 +39,7 @@ export const authenticateToken = (
     const decoded = jwt.verify(token, JWT_SECRET) as {
       id?: string;
       email?: string;
+      role:string;
     };
 
     if (!decoded.id || !decoded.email) {
@@ -48,6 +50,7 @@ export const authenticateToken = (
     req.user = {
       id: decoded.id,
       email: decoded.email,
+      role: decoded.role
     };
 
     logger.info("Authenticated request", { userId: req.user.id, path: req.path });

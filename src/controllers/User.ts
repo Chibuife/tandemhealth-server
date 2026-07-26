@@ -105,8 +105,8 @@ export const loginUser = async (req: Request, res: Response) => {
       });
     }
 
-    const accessToken = generateAccessToken(user.id, user.email, );
-    const refreshToken = generateRefreshToken(user.id, user.email);
+    const accessToken = generateAccessToken(user.id, user.email,user.role );
+    const refreshToken = generateRefreshToken(user.id, user.email, user.role);
 
     logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] User logged in: ${user.email}`);
     await redisClient.del(key);
@@ -180,8 +180,8 @@ export const registerUser = async (req: Request, res: Response) => {
 
     const user = await UserRepository.create({ name, email, password, role });
 
-    const accessToken = generateAccessToken(user.id, user.email);
-    const refreshToken = generateRefreshToken(user.id, user.email);
+    const accessToken = generateAccessToken(user.id, user.email, role);
+    const refreshToken = generateRefreshToken(user.id, user.email, role);
 
     logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] New user registered: ${user.email}`);
 
@@ -241,11 +241,12 @@ export const refreshToken = (req: Request, res: Response) => {
     ) as {
       id: string;
       email: string;
+      role:string;
     };
 
     const accessToken = generateAccessToken(
       payload.id,
-      payload.email
+      payload.email, payload.role
     );
 
     logger.info(`[${(req as AuthenticatedRequest).requestId ?? "-"}] Access token refreshed for ${payload.email}`);
