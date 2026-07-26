@@ -16,7 +16,7 @@ import requestId from './middleware/requestId.js';
 import cookieParser from 'cookie-parser';
 import { initSocketServer } from './sockets/index.js';
 import cors from "cors";
-
+import "./worker/soap-worker.js";
 
 const app = express();
 const server = createServer(app);

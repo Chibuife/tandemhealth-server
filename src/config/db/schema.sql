@@ -92,4 +92,3 @@
 
 --     created_at TIMESTAMPTZ DEFAULT now()
 -- );
-select * from transcripts

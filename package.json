@@ -16,6 +16,7 @@
   "type": "module",
   "dependencies": {
     "@google-cloud/speech": "^7.5.0",
+    "@google/generative-ai": "^0.24.1",
     "@livekit/agents": "^1.5.5",
     "@livekit/agents-plugin-deepgram": "^1.5.5",
     "@livekit/rtc-node": "^0.13.31",
@@ -31,6 +32,7 @@
     "jsonwebtoken": "^9.0.3",
     "livekit-server-sdk": "^2.17.0",
     "morgan": "^1.11.0",
+    "node-cron": "^4.6.0",
     "pg": "^8.22.0",
     "rate-limit-redis": "^5.0.0",
     "redis": "^6.1.0",
