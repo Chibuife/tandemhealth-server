@@ -190,7 +190,7 @@ export const listMyMeetings = async (
     const meetings = await MeetingRepository.findUpcomingForUser(
       req.user!.id
     );
-
+console.log(meetings,"meetings")
     return res.status(200).json({ meetings });
   } catch (error) {
     logger.error("Failed to list meetings", error);
