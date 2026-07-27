@@ -118,7 +118,7 @@ export const UserRepository = {
     const result = await pool.query(
       `SELECT id, name, email, role, created_at, updated_at
      FROM users
-     WHERE id = $1 AND role = 'doctor'`,
+     WHERE id = $1`,
       [id]
     );
 
