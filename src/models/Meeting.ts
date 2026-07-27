@@ -12,8 +12,8 @@ export interface Meeting {
   id: string;
   slug: string;
   title: string;
-  hostId: string;
-  participantId: string | null;
+  patientId: string;
+  doctorsId: string | null;
   scheduledStart: Date;
   scheduledEnd: Date;
   status: MeetingStatus;
@@ -35,8 +35,8 @@ export interface MeetingWithParticipants extends Meeting {
 
 export interface ScheduleMeetingInput {
   title: string;
-  hostId: string;
-  participantId?: string;
+  doctorsId: string;
+  patientId: string;
   scheduledStart: Date;
   scheduledEnd: Date;
   reasonForVisit?: string;
@@ -48,8 +48,8 @@ export const mapRowToMeeting = (row: any): Meeting => ({
   id: row.id,
   slug: row.slug,
   title: row.title,
-  hostId: row.host_id,
-  participantId: row.participant_id,
+  patientId: row.host_id,
+  doctorsId: row.participant_id,
   scheduledStart: row.scheduled_start,
   scheduledEnd: row.scheduled_end,
   status: row.status,

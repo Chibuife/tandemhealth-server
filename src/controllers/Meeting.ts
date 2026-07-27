@@ -5,13 +5,14 @@ import { getSocketServer } from "../sockets/index.js";
 import { logger } from "../utils/logger.js";
 import type { AuthenticatedRequest } from "../middleware/authmiddleware.js";
 import { ensureAIAgentDispatched } from "../services/AIAgentDispatch.js";
+import { UserRepository } from "../repositories/UserRepository.js";
 
 // How early a participant is allowed to join before the scheduled start,
 // same idea as Google Meet letting you in a few minutes early.
 const JOIN_WINDOW_MINUTES_BEFORE = 10;
 
-const isParticipant = (meeting: { hostId: string; participantId: string | null }, userId: string) =>
-  meeting.hostId === userId || meeting.participantId === userId;
+const isParticipant = (meeting: { patientId: string; doctorsId: string | null }, userId: string) =>
+  meeting.patientId === userId || meeting.doctorsId === userId;
 
 // req.params values can be typed as `string | string[]` (Express 5 allows
 // repeated route params). Our routes only ever produce a single string, so
@@ -26,7 +27,7 @@ export const scheduleMeeting = async (
   try {
     const {
       title,
-      participantId,
+      doctorsId,
       scheduledStart,
       scheduledEnd,
       reasonForVisit,
@@ -52,11 +53,16 @@ export const scheduleMeeting = async (
     if (priority && !["low", "medium", "high"].includes(priority)) {
       return res.status(400).json({ message: "priority must be low, medium, or high" });
     }
+    const doctor = await UserRepository.findDoctorById(doctorsId);
+
+    if (!doctor || doctor.role !== "doctor") {
+      return res.status(403).json({ message: "Can only make req to a doctor" });
+    }
 
     const meeting = await MeetingRepository.create({
       title,
-      hostId: req.user!.id,
-      participantId,
+      patientId: req.user!.id,
+      doctorsId,
       scheduledStart: start,
       scheduledEnd: end,
       reasonForVisit,
@@ -108,11 +114,11 @@ export const acceptConsultation = async (
       return res.status(404).json({ message: "Consultation not found" });
     }
 
-    if (meeting.participantId !== req.user!.id) {
+
+    if (meeting.doctorsId !== req.user!.id) {
       return res.status(403).json({ message: "Only the assigned doctor can respond to this request" });
     }
 
-    console.log(meeting, "meet")
 
     if (meeting.status !== "pending") {
       return res.status(409).json({ message: `Consultation is already ${meeting.status}` });
@@ -121,9 +127,9 @@ export const acceptConsultation = async (
     const updated = await MeetingRepository.setStatusById(id, "accepted");
 
     try {
-      if (meeting.participantId) {
+      if (meeting.patientId) {
         getSocketServer()
-          .to(`user:${meeting.participantId}`)
+          .to(`user:${meeting.patientId}`)
           .emit("consultation:accepted", { id: meeting.id, slug: meeting.slug });
       }
     } catch (error) {
@@ -149,7 +155,7 @@ export const declineConsultation = async (
       return res.status(404).json({ message: "Consultation not found" });
     }
 
-    if (meeting.hostId !== req.user!.id) {
+    if (meeting.patientId !== req.user!.id) {
       return res.status(403).json({ message: "Only the assigned doctor can respond to this request" });
     }
 
@@ -160,9 +166,9 @@ export const declineConsultation = async (
     const updated = await MeetingRepository.setStatusById(id, "declined");
 
     try {
-      if (meeting.participantId) {
+      if (meeting.doctorsId) {
         getSocketServer()
-          .to(`user:${meeting.participantId}`)
+          .to(`user:${meeting.doctorsId}`)
           .emit("consultation:declined", { id: meeting.id, slug: meeting.slug });
       }
     } catch (error) {
@@ -306,7 +312,7 @@ export const getMeetingToken = async (
     // fails, the join itself should still succeed.
     try {
       getSocketServer()
-        .to(`user:${req.user!.id === meeting.hostId ? meeting.participantId : meeting.hostId}`)
+        .to(`user:${req.user!.id === meeting.patientId ? meeting.doctorsId : meeting.patientId}`)
         .emit("meeting:participant-joined", { slug: meeting.slug, userId: req.user!.id });
     } catch (error) {
       logger.warn("Could not emit meeting:participant-joined", error);
@@ -334,7 +340,7 @@ export const endMeeting = async (
       return res.status(404).json({ message: "Meeting not found" });
     }
 
-    if (meeting.hostId !== req.user!.id) {
+    if (meeting.patientId !== req.user!.id) {
       return res.status(403).json({ message: "Only the host can end the meeting" });
     }
 
@@ -342,7 +348,7 @@ export const endMeeting = async (
 
     try {
       getSocketServer()
-        .to(`user:${meeting.participantId}`)
+        .to(`user:${meeting.doctorsId}`)
         .emit("meeting:ended", { slug: meeting.slug });
     } catch (error) {
       logger.warn("Could not emit meeting:ended", error);

@@ -30,14 +30,12 @@
 -- BEFORE UPDATE ON users
 -- FOR EACH ROW
 -- EXECUTE FUNCTION set_updated_at();
-
--- -- Meetings
 -- CREATE TABLE meetings (
 --   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 --   slug VARCHAR(20) NOT NULL UNIQUE,
 --   title VARCHAR(255) NOT NULL,
 
---   host_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+--   doctor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
 --   participant_id UUID REFERENCES users(id) ON DELETE SET NULL,
 
 --   scheduled_start TIMESTAMPTZ NOT NULL,
@@ -49,8 +47,6 @@
 --   priority VARCHAR(20)
 --     CHECK (priority IN ('low', 'medium', 'high'))
 --     DEFAULT 'medium',
-
-
 
 --   status VARCHAR(20)
 --     CHECK (status IN ('pending','accepted','declined','completed'))

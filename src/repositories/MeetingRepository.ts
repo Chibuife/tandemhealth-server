@@ -32,15 +32,15 @@ export const MeetingRepository = {
       try {
         const result = await pool.query(
           `INSERT INTO meetings
-            (slug, title, host_id, participant_id, scheduled_start, scheduled_end,
+            (slug, title, patient_id, doctors_id, scheduled_start, scheduled_end,
              reason_for_visit, priority, consultation_type)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
            RETURNING *`,
           [
             slug,
             input.title,
-            input.hostId,
-            input.participantId ?? null,
+            input.patientId,
+            input.doctorsId,
             input.scheduledStart,
             input.scheduledEnd,
             input.reasonForVisit ?? null,
