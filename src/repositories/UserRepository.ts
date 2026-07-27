@@ -122,6 +122,7 @@ export const UserRepository = {
       [id]
     );
 
+    console.log(result,"result")
     if (result.rowCount === 0) {
       return null;
     }
