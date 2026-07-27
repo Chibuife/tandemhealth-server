@@ -92,7 +92,7 @@ export const MeetingRepository = {
   async findUpcomingForUser(userId: string): Promise<Meeting[]> {
     const result = await pool.query(
       `SELECT * FROM meetings
-       WHERE (host_id = $1 OR participant_id = $1)
+       WHERE (paitent_id = $1 OR doctor_id = $1)
        ORDER BY scheduled_start ASC`,
       [userId]
     );
