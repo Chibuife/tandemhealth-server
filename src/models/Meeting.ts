@@ -64,6 +64,6 @@ export const mapRowToMeetingWithParticipants = (row: any): MeetingWithParticipan
   ...mapRowToMeeting(row),
   patientName: row.patient_name,
   patientEmail: row.patient_email,
-  hostName: row.host_name,
-  hostEmail: row.host_email,
+  hostName: row.doctor_name,
+  hostEmail: row.doctor_email,
 });
