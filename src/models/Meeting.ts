@@ -29,8 +29,8 @@ export interface Meeting {
 export interface MeetingWithParticipants extends Meeting {
   patientName: string | null;
   patientEmail: string | null;
-  hostName: string | null;
-  hostEmail: string | null;
+  doctorName: string | null;
+  doctorEmail: string | null;
 }
 
 export interface ScheduleMeetingInput {
@@ -64,6 +64,6 @@ export const mapRowToMeetingWithParticipants = (row: any): MeetingWithParticipan
   ...mapRowToMeeting(row),
   patientName: row.patient_name,
   patientEmail: row.patient_email,
-  hostName: row.doctor_name,
-  hostEmail: row.doctor_email,
+  doctorName: row.doctor_name,
+  doctorEmail: row.doctor_email,
 });
