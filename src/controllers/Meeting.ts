@@ -53,8 +53,9 @@ export const scheduleMeeting = async (
     if (priority && !["low", "medium", "high"].includes(priority)) {
       return res.status(400).json({ message: "priority must be low, medium, or high" });
     }
+    console.log(doctorId,"doc id")
     const doctor = await UserRepository.findDoctorById(doctorId);
-    console.log(doctor,"doctor")
+    // console.log(doctor,"doctor")
     if (!doctor || doctor.role !== "doctor") {
       return res.status(403).json({ message: "Can only make req to a doctor" });
     }
