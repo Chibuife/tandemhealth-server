@@ -212,7 +212,6 @@ export const getConsultationById = async (
       return res.status(404).json({ message: "Consultation not found" });
     }
 
-    console.log(meeting,req.user)
     if (!isParticipant(meeting, req.user!.id)) {
       return res.status(403).json({ message: "You are not part of this consultation" });
     }

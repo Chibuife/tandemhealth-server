@@ -258,7 +258,7 @@ export const MeetingRepository = {
        ORDER BY scheduled_start ASC`,
       [userId]
     );
-    return result.rows.map(mapRowToMeeting);
+    return result.rows.map(mapRowToMeetingWithParticipants);
   },
 
   // ✅ Fixed: was broken SELECT * with alias m but no join
