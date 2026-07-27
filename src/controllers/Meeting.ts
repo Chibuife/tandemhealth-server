@@ -54,6 +54,7 @@ export const scheduleMeeting = async (
       return res.status(400).json({ message: "priority must be low, medium, or high" });
     }
     console.log(doctorId,"doc id")
+    console.log(req.body)
     const doctor = await UserRepository.findDoctorById(doctorId);
     // console.log(doctor,"doctor")
     if (!doctor || doctor.role !== "doctor") {
