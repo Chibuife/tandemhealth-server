@@ -251,15 +251,15 @@ export const MeetingRepository = {
     return mapRowToMeeting(result.rows[0]);
   },
 
-  async findUpcomingForUser(userId: string): Promise<Meeting[]> {
-    const result = await pool.query(
-      `SELECT * FROM meetings
-       WHERE (patient_id = $1 OR doctor_id = $1)
-       ORDER BY scheduled_start ASC`,
-      [userId]
-    );
-    return result.rows.map(mapRowToMeetingWithParticipants);
-  },
+async findUpcomingForUser(userId: string): Promise<MeetingWithParticipants[]> {
+  const result = await pool.query(
+    `${JOINED_SELECT}
+     WHERE (m.patient_id = $1 OR m.doctor_id = $1)
+     ORDER BY m.scheduled_start ASC`,
+    [userId]
+  );
+  return result.rows.map(mapRowToMeetingWithParticipants);
+},
 
   // ✅ Fixed: was broken SELECT * with alias m but no join
   async listForDoctor(
