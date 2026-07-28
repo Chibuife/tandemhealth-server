@@ -30,13 +30,14 @@
 -- BEFORE UPDATE ON users
 -- FOR EACH ROW
 -- EXECUTE FUNCTION set_updated_at();
+-- 
 -- CREATE TABLE meetings (
 --   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 --   slug VARCHAR(20) NOT NULL UNIQUE,
 --   title VARCHAR(255) NOT NULL,
 
 --   doctor_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
---   participant_id UUID REFERENCES users(id) ON DELETE SET NULL,
+--   patient_id UUID REFERENCES users(id) ON DELETE SET NULL,
 
 --   scheduled_start TIMESTAMPTZ NOT NULL,
 --   scheduled_end TIMESTAMPTZ NOT NULL,
@@ -60,14 +61,13 @@
 -- );
 
 -- CREATE INDEX idx_meetings_slug ON meetings(slug);
--- CREATE INDEX idx_meetings_host ON meetings(host_id);
--- CREATE INDEX idx_meetings_participant ON meetings(participant_id);
+-- CREATE INDEX idx_meetings_doctor ON meetings(doctor_id);
+-- CREATE INDEX idx_meetings_patient ON meetings(patient_id);
 
 -- CREATE TRIGGER trg_meetings_updated_at
 -- BEFORE UPDATE ON meetings
 -- FOR EACH ROW
 -- EXECUTE FUNCTION set_updated_at();
-
 
 -- CREATE TABLE transcripts (
 --     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

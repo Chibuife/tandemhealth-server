@@ -1,9 +1,14 @@
 import { Router, Request, Response } from "express";
 import { pool } from "../config/db/index.js";
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { MeetingRepository } from "../repositories/MeetingRepository.js";
+import { getSocketServer } from "../sockets/index.js";
+import { logger } from "../utils/logger.js";
+import { AuthenticatedRequest } from "../middleware/authmiddleware.js";
 
 const router = Router();
-
+const getSlugParam = (slug: string | string[]): string =>
+  Array.isArray(slug) ? slug[0] : slug;
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const model = genAI.getGenerativeModel({
   model: 'gemini-3.6-flash',
@@ -149,6 +154,61 @@ Return ONLY a JSON object, no markdown, no explanation.`;
   } catch (err) {
     console.error('[soap] Gemini failed:', err);
     return res.status(500).json({ error: 'Failed to generate SOAP note' });
+  }
+});
+
+
+router.patch('/:slug/soap/publish', async (req: AuthenticatedRequest, res: Response) => {
+  try {
+    const slug = getSlugParam(req.params.slug);
+    const meeting = await MeetingRepository.findBySlug(slug);
+
+    if (!meeting) {
+      return res.status(404).json({ message: "Meeting not found" });
+    }
+
+    if (meeting.doctorId !== req.user!.id) {
+      return res.status(403).json({ message: "Only the doctor can publish the SOAP note" });
+    }
+
+    const { soap } = req.body;
+
+    if (!soap) {
+      return res.status(400).json({ message: "SOAP note is required" });
+    }
+
+    // ✅ Save the edited SOAP to the DB first
+    await pool.query(
+      `INSERT INTO soap_notes (room_name, subjective, objective, assessment, plan, status, published)
+       VALUES ($1, $2, $3, $4, $5, $6, true)
+       ON CONFLICT (room_name)
+       DO UPDATE SET
+         subjective = EXCLUDED.subjective,
+         objective  = EXCLUDED.objective,
+         assessment = EXCLUDED.assessment,
+         plan       = EXCLUDED.plan,
+         status     = EXCLUDED.status,
+         published  = true,
+         updated_at = NOW()`,
+      [
+        slug,
+        soap.subjective,
+        soap.objective,
+        soap.assessment,
+        JSON.stringify(soap.plan),  // store plan array as JSON
+        soap.status ?? 'draft',
+      ]
+    );
+
+    // ✅ Then emit the saved version to the patient
+    getSocketServer()
+      .to(`user:${meeting.patientId}`)
+      .emit("consultation:soap-published", { slug, soap });
+
+    return res.status(200).json({ message: "SOAP note saved and published to patient" });
+  } catch (error) {
+    logger.error("Failed to publish SOAP note", error);
+    return res.status(500).json({ message: "Failed to publish SOAP note" });
   }
 });
 

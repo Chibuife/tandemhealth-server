@@ -8,7 +8,7 @@ export const generateAccessToken = (userId: string, email: string, role:string) 
     { id: userId, email,role },
     ACCESS_SECRET,
     {
-      expiresIn: "30m",
+      expiresIn: "1d",
     }
   );
 };
