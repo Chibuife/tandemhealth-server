@@ -160,3 +160,38 @@ export const endMeetingLimiter = rateLimit({
         sendCommand: (...args) => redisClient.sendCommand(args),
     }),
 });
+
+
+
+export const getSoapLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many SOAP note requests. Please slow down." },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
+
+export const generateSoapLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 20, // generation is expensive — tighter cap
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many generation requests. Please try again later." },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
+
+export const publishSoapLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    max: 30,
+    standardHeaders: true,
+    legacyHeaders: false,
+    message: { message: "Too many publish requests. Please slow down." },
+    store: new RedisStore({
+        sendCommand: (...args) => redisClient.sendCommand(args),
+    }),
+});
